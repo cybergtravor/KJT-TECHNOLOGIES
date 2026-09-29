@@ -1,0 +1,201 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800' width='1200' height='800'>
+  <defs>
+    <linearGradient id='bgGrad' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#0A192F'/>
+      <stop offset='50%' stop-color='#0F284E'/>
+      <stop offset='100%' stop-color='#06101E'/>
+    </linearGradient>
+    <linearGradient id='cyanGrad' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#00D4FF'/>
+      <stop offset='100%' stop-color='#0055FF'/>
+    </linearGradient>
+    <linearGradient id='cardGrad' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#132A4A'/>
+      <stop offset='100%' stop-color='#0B1C33'/>
+    </linearGradient>
+    <linearGradient id='screenGrad' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#0B192C'/>
+      <stop offset='100%' stop-color='#050C16'/>
+    </linearGradient>
+    <filter id='dropShadow' x='-10%' y='-10%' width='130%' height='130%'>
+      <feDropShadow dx='0' dy='15' stdDeviation='20' flood-color='#000000' flood-opacity='0.6'/>
+    </filter>
+  </defs>
+
+  <!-- Canvas Background with Subtle Grid Pattern -->
+  <rect width='1200' height='800' fill='url(#bgGrad)'/>
+
+  <!-- Subtle Blueprint Grid Lines -->
+  <g stroke='#1E3A5F' stroke-width='1' opacity='0.3'>
+    <line x1='0' y1='100' x2='1200' y2='100'/>
+    <line x1='0' y1='200' x2='1200' y2='200'/>
+    <line x1='0' y1='300' x2='1200' y2='300'/>
+    <line x1='0' y1='400' x2='1200' y2='400'/>
+    <line x1='0' y1='500' x2='1200' y2='500'/>
+    <line x1='0' y1='600' x2='1200' y2='600'/>
+    <line x1='0' y1='700' x2='1200' y2='700'/>
+
+    <line x1='150' y1='0' x2='150' y2='800'/>
+    <line x1='300' y1='0' x2='300' y2='800'/>
+    <line x1='450' y1='0' x2='450' y2='800'/>
+    <line x1='600' y1='0' x2='600' y2='800'/>
+    <line x1='750' y1='0' x2='750' y2='800'/>
+    <line x1='900' y1='0' x2='900' y2='800'/>
+    <line x1='1050' y1='0' x2='1050' y2='800'/>
+  </g>
+
+  <!-- Ambient Glow -->
+  <circle cx='600' cy='380' r='320' fill='#00D4FF' opacity='0.08' filter='blur(60px)'/>
+  <circle cx='950' cy='520' r='200' fill='#0055FF' opacity='0.1' filter='blur(50px)'/>
+
+  <!-- UI/UX Wireframe & Desktop Application Frame -->
+  <g filter='url(#dropShadow)'>
+    <!-- Main Window Canvas -->
+    <rect x='120' y='110' width='740' height='480' rx='14' fill='url(#screenGrad)' stroke='#1E3A5F' stroke-width='2'/>
+    
+    <!-- Window Header Bar -->
+    <path d='M120 124 Q120 110 134 110 L846 110 Q860 110 860 124 L860 152 L120 152 Z' fill='#0D2038'/>
+    <circle cx='145' cy='131' r='5' fill='#EF4444'/>
+    <circle cx='163' cy='131' r='5' fill='#F59E0B'/>
+    <circle cx='181' cy='131' r='5' fill='#10B981'/>
+    <rect x='280' y='122' width='340' height='18' rx='4' fill='#152E4E'/>
+    <text x='450' y='135' font-family='sans-serif' font-size='10' font-weight='bold' fill='#64748B' text-anchor='middle'>https://design.kjttechnologies.com/prototype-v4</text>
+
+    <!-- App Sidebar Wireframe -->
+    <rect x='136' y='168' width='140' height='405' rx='6' fill='#0E233E'/>
+    <rect x='152' y='188' width='80' height='12' rx='3' fill='#00D4FF'/>
+    <rect x='152' y='218' width='108' height='10' rx='3' fill='#1E3D66'/>
+    <rect x='152' y='240' width='95' height='10' rx='3' fill='#1E3D66'/>
+    <rect x='152' y='262' width='102' height='10' rx='3' fill='#1E3D66'/>
+    <rect x='152' y='284' width='88' height='10' rx='3' fill='#1E3D66'/>
+
+    <!-- App Content Dashboard Elements -->
+    <!-- Hero Banner Card -->
+    <rect x='292' y='168' width='550' height='130' rx='8' fill='url(#cardGrad)' stroke='#00D4FF' stroke-width='1.5'/>
+    <text x='314' y='204' font-family='sans-serif' font-size='18' font-weight='bold' fill='#FFFFFF'>Enterprise Security Dashboard</text>
+    <text x='314' y='226' font-family='sans-serif' font-size='12' fill='#94A3B8'>Real-time SOC threat metrics and network telemetry monitoring</text>
+    <!-- Interactive Button -->
+    <rect x='314' y='244' width='120' height='32' rx='4' fill='#00D4FF'/>
+    <text x='374' y='264' font-family='sans-serif' font-size='11' font-weight='bold' fill='#0A192F' text-anchor='middle'>Deploy Shield</text>
+
+    <!-- 3 Data / Component Cards in Desktop View -->
+    <rect x='292' y='312' width='172' height='135' rx='8' fill='#0D223B' stroke='#1E3D66' stroke-width='1'/>
+    <circle cx='324' cy='342' r='14' fill='#00D4FF' opacity='0.2'/>
+    <rect x='348' y='336' width='85' height='12' rx='3' fill='#FFFFFF'/>
+    <text x='314' y='382' font-family='sans-serif' font-size='22' font-weight='900' fill='#00D4FF'>99.99%</text>
+    <text x='314' y='402' font-family='sans-serif' font-size='11' fill='#64748B'>System Uptime SLA</text>
+    <line x1='314' y1='425' x2='444' y2='425' stroke='#00D4FF' stroke-width='3' stroke-linecap='round'/>
+
+    <rect x='480' y='312' width='172' height='135' rx='8' fill='#0D223B' stroke='#1E3D66' stroke-width='1'/>
+    <circle cx='512' cy='342' r='14' fill='#0055FF' opacity='0.3'/>
+    <rect x='536' y='336' width='85' height='12' rx='3' fill='#FFFFFF'/>
+    <text x='502' y='382' font-family='sans-serif' font-size='22' font-weight='900' fill='#FFFFFF'>0 ms</text>
+    <text x='502' y='402' font-family='sans-serif' font-size='11' fill='#64748B'>Vulnerability Window</text>
+    <line x1='502' y1='425' x2='612' y2='425' stroke='#0055FF' stroke-width='3' stroke-linecap='round'/>
+
+    <rect x='668' y='312' width='172' height='135' rx='8' fill='#0D223B' stroke='#1E3D66' stroke-width='1'/>
+    <circle cx='700' cy='342' r='14' fill='#10B981' opacity='0.2'/>
+    <rect x='724' y='336' width='85' height='12' rx='3' fill='#FFFFFF'/>
+    <text x='690' y='382' font-family='sans-serif' font-size='22' font-weight='900' fill='#10B981'>24/7</text>
+    <text x='690' y='402' font-family='sans-serif' font-size='11' fill='#64748B'>SOC Continuous Monitoring</text>
+    <line x1='690' y1='425' x2='820' y2='425' stroke='#10B981' stroke-width='3' stroke-linecap='round'/>
+
+    <!-- Interactive Data Chart in Desktop View -->
+    <rect x='292' y='460' width='548' height='112' rx='8' fill='#0B1C33' stroke='#1E3D66' stroke-width='1'/>
+    <polyline points='320,530 380,500 440,515 500,480 560,490 620,470 680,475 740,465 800,480' fill='none' stroke='#00D4FF' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/>
+    <polygon points='320,530 380,500 440,515 500,480 560,490 620,470 680,475 740,465 800,480 800,555 320,555' fill='url(#cyanGrad)' opacity='0.15'/>
+  </g>
+
+  <!-- Mobile App UI/UX Mockup Device (Floating Right with Realistic Bezel) -->
+  <g filter='url(#dropShadow)' transform='translate(810, 210)'>
+    <!-- Phone Body -->
+    <rect x='0' y='0' width='270' height='510' rx='36' fill='#050B14' stroke='#2A4365' stroke-width='4'/>
+    <!-- Dynamic Island / Speaker Notch -->
+    <rect x='90' y='14' width='90' height='18' rx='9' fill='#000000'/>
+    <circle cx='162' cy='23' r='4' fill='#1E293B'/>
+
+    <!-- Phone Screen -->
+    <rect x='14' y='42' width='242' height='450' rx='24' fill='#09172A'/>
+
+    <!-- Mobile Header -->
+    <circle cx='38' cy='72' r='14' fill='#00D4FF' opacity='0.2'/>
+    <rect x='60' y='66' width='90' height='12' rx='3' fill='#FFFFFF'/>
+    <rect x='215' y='64' width='24' height='16' rx='4' fill='#1E3D66'/>
+
+    <!-- Mobile App Feature Cards -->
+    <rect x='26' y='102' width='218' height='90' rx='12' fill='url(#cardGrad)' stroke='#00D4FF' stroke-width='1.5'/>
+    <text x='40' y='132' font-family='sans-serif' font-size='14' font-weight='bold' fill='#FFFFFF'>Smart Portal</text>
+    <text x='40' y='150' font-family='sans-serif' font-size='10' fill='#94A3B8'>Biometric Authentication</text>
+    <rect x='40' y='162' width='80' height='18' rx='4' fill='#00D4FF'/>
+    <text x='80' y='175' font-family='sans-serif' font-size='9' font-weight='bold' fill='#0A192F' text-anchor='middle'>Authorize</text>
+
+    <!-- Mobile List Items -->
+    <rect x='26' y='204' width='218' height='52' rx='10' fill='#0D223B' stroke='#1E3D66' stroke-width='1'/>
+    <circle cx='52' cy='230' r='14' fill='#00D4FF' opacity='0.2'/>
+    <rect x='78' y='220' width='100' height='10' rx='3' fill='#FFFFFF'/>
+    <rect x='78' y='235' width='60' height='8' rx='2' fill='#64748B'/>
+
+    <rect x='26' y='268' width='218' height='52' rx='10' fill='#0D223B' stroke='#1E3D66' stroke-width='1'/>
+    <circle cx='52' cy='294' r='14' fill='#10B981' opacity='0.2'/>
+    <rect x='78' y='284' width='110' height='10' rx='3' fill='#FFFFFF'/>
+    <rect x='78' y='299' width='75' height='8' rx='2' fill='#64748B'/>
+
+    <rect x='26' y='332' width='218' height='52' rx='10' fill='#0D223B' stroke='#1E3D66' stroke-width='1'/>
+    <circle cx='52' cy='358' r='14' fill='#0055FF' opacity='0.3'/>
+    <rect x='78' y='348' width='95' height='10' rx='3' fill='#FFFFFF'/>
+    <rect x='78' y='363' width='55' height='8' rx='2' fill='#64748B'/>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <rect x='14' y='430' width='242' height='62' rx='18' fill='#071220'/>
+    <circle cx='60' cy='460' r='8' fill='#00D4FF'/>
+    <circle cx='135' cy='460' r='8' fill='#334155'/>
+    <circle cx='210' cy='460' r='8' fill='#334155'/>
+  </g>
+
+  <!-- UI/UX Designer Tools & Vectors: Color Swatches & Pen Tool Cursor -->
+  <g transform='translate(60, 520)' filter='url(#dropShadow)'>
+    <!-- Swatch Palette Container -->
+    <rect x='0' y='0' width='230' height='140' rx='12' fill='#0A1C33' stroke='#00D4FF' stroke-width='1.5'/>
+    <text x='20' y='28' font-family='sans-serif' font-size='11' font-weight='bold' fill='#00D4FF' letter-spacing='1'>BRAND COLOR TOKENS</text>
+    <rect x='20' y='42' width='40' height='40' rx='6' fill='#00D4FF'/>
+    <text x='20' y='96' font-family='sans-serif' font-size='9' font-weight='bold' fill='#CBD5E1'>#00D4FF</text>
+    <text x='20' y='108' font-family='sans-serif' font-size='8' fill='#64748B'>Cyan Primary</text>
+
+    <rect x='72' y='42' width='40' height='40' rx='6' fill='#0055FF'/>
+    <text x='72' y='96' font-family='sans-serif' font-size='9' font-weight='bold' fill='#CBD5E1'>#0055FF</text>
+    <text x='72' y='108' font-family='sans-serif' font-size='8' fill='#64748B'>Royal Cobalt</text>
+
+    <rect x='124' y='42' width='40' height='40' rx='6' fill='#0A192F'/>
+    <rect x='124' y='42' width='40' height='40' rx='6' fill='none' stroke='#334155' stroke-width='1'/>
+    <text x='124' y='96' font-family='sans-serif' font-size='9' font-weight='bold' fill='#CBD5E1'>#0A192F</text>
+    <text x='124' y='108' font-family='sans-serif' font-size='8' fill='#64748B'>Deep Navy</text>
+
+    <rect x='176' y='42' width='40' height='40' rx='6' fill='#10B981'/>
+    <text x='176' y='96' font-family='sans-serif' font-size='9' font-weight='bold' fill='#CBD5E1'>#10B981</text>
+    <text x='176' y='108' font-family='sans-serif' font-size='8' fill='#64748B'>Emerald Safe</text>
+  </g>
+
+  <!-- Vector Pen Tool Cursor & Bézier Handles -->
+  <g transform='translate(540, 240)'>
+    <!-- Bézier Curve Guide -->
+    <path d='M-120,80 C-40,-20 80,120 180,40' fill='none' stroke='#00D4FF' stroke-width='2' stroke-dasharray='4,4'/>
+    <!-- Handles -->
+    <line x1='-40' y1='-20' x2='-40' y2='40' stroke='#38BDF8' stroke-width='1.5'/>
+    <circle cx='-40' cy='-20' r='5' fill='#FFFFFF' stroke='#00D4FF' stroke-width='2'/>
+    <circle cx='-40' cy='40' r='4' fill='#00D4FF'/>
+    <line x1='80' y1='120' x2='80' y2='60' stroke='#38BDF8' stroke-width='1.5'/>
+    <circle cx='80' cy='120' r='5' fill='#FFFFFF' stroke='#00D4FF' stroke-width='2'/>
+    
+    <!-- Vector Pen Cursor Tool -->
+    <path d='M0,0 L18,36 L10,32 L6,44 L-2,40 L2,28 L-8,24 Z' fill='#00D4FF' stroke='#FFFFFF' stroke-width='2' filter='url(#dropShadow)'/>
+  </g>
+
+  <!-- Prototyping Badge -->
+  <g transform='translate(310, 600)' filter='url(#dropShadow)'>
+    <rect x='0' y='0' width='380' height='54' rx='8' fill='#091B33' stroke='#1E3D66' stroke-width='1.5'/>
+    <circle cx='30' cy='27' r='12' fill='#00D4FF'/>
+    <path d='M25 27 L28 30 L35 23' stroke='#0A192F' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/>
+    <text x='54' y='26' font-family='sans-serif' font-size='13' font-weight='bold' fill='#FFFFFF'>Human-Centric UX &amp; Interactive Prototyping</text>
+    <text x='54' y='42' font-family='sans-serif' font-size='11' fill='#94A3B8'>Engineered for high conversion &amp; WCAG AA accessibility</text>
+  </g>
+</svg>

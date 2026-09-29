@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="14" fill="#0A192F"/>
+  <path d="M32 6L54 16V32C54 44.5 44 54 32 58C20 54 10 44.5 10 32V16L32 6Z" fill="#081528" stroke="#00D4FF" stroke-width="3" stroke-linejoin="round"/>
+  <text x="32" y="38" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="900" fill="#00D4FF" text-anchor="middle" letter-spacing="1">KJT</text>
+</svg>

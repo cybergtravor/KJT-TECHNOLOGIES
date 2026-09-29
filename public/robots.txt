@@ -1,0 +1,30 @@
+# =====================================================================
+# KJT TECHNOLOGIES - ROBOTS.TXT
+# =====================================================================
+# NOTICE: Before deploying to production, verify that the Sitemap URL below
+# points to your official live custom domain (e.g., https://kjttechnologies.com/sitemap.xml).
+# =====================================================================
+
+User-agent: *
+Allow: /
+
+# Prevent indexing of internal administrator and editor pages
+Disallow: /admin
+Disallow: /admin/
+Disallow: /admin/login
+Disallow: /admin/dashboard
+Disallow: /admin/articles/
+Disallow: /admin/articles/new
+Disallow: /admin/articles/edit/
+Disallow: /admin/media
+Disallow: /api/
+
+# Prevent indexing of draft articles and preview queries
+Disallow: /preview
+Disallow: /draft
+Disallow: /*?*preview=*
+Disallow: /*?*draft=*
+
+# Canonical Sitemap Directive (Only contains published articles and public pages)
+Sitemap: https://kjttechnologies.com/sitemap.xml
+
