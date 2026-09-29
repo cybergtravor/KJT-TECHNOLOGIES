@@ -77,6 +77,18 @@ CREATE TABLE IF NOT EXISTS public.article_images (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 5b. Create Media Library Table (used by admin Media Library)
+CREATE TABLE IF NOT EXISTS public.media_files (
+    id VARCHAR(150) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    url TEXT NOT NULL,
+    alt_text VARCHAR(300),
+    caption TEXT,
+    size_bytes BIGINT,
+    mime_type VARCHAR(100),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- 6. Indexes for Blazing Fast Queries
 CREATE INDEX IF NOT EXISTS idx_articles_status ON public.articles(status);
 CREATE INDEX IF NOT EXISTS idx_articles_slug ON public.articles(slug);
@@ -94,6 +106,7 @@ ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.authors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.article_images ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.media_files ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------
 -- Policy A: Public Visitors Can Read Only Published Articles
@@ -128,6 +141,15 @@ ON public.authors FOR SELECT TO anon, authenticated USING (true);
 
 CREATE POLICY "Authenticated admins can manage authors"
 ON public.authors FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- ---------------------------------------------------------------------
+-- Policy C2: Media Library access
+-- ---------------------------------------------------------------------
+CREATE POLICY "Public visitors can view media files"
+ON public.media_files FOR SELECT TO anon, authenticated USING (true);
+
+CREATE POLICY "Authenticated admins can manage media files"
+ON public.media_files FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- ---------------------------------------------------------------------
 -- Policy D: Storage Bucket Configuration for 'article-images'
