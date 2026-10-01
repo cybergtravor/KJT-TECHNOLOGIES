@@ -24,6 +24,82 @@ import {
 } from './contentSanitizer';
 
 const LOCAL_STORAGE_KEY = 'kjt_custom_articles_v1';
+const TOMBSTONE_KEY = 'kjt_deleted_default_articles';
+const READS_STORAGE_KEY = 'kjt_article_reads_v1';
+
+// =====================================================================
+// READ / VIEW COUNT TRACKING
+// =====================================================================
+
+/**
+ * Get all read counts from localStorage — returns a map of { [slugOrId]: count }
+ */
+export function getArticleReads(): Record<string, number> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(READS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Increment read count for an article (call once per article page view)
+ * Returns the new total count for that article.
+ */
+export function trackArticleRead(slug: string): number {
+  if (typeof window === 'undefined' || !slug) return 0;
+  try {
+    const reads = getArticleReads();
+    const current = reads[slug] || 0;
+    const updated = { ...reads, [slug]: current + 1 };
+    localStorage.setItem(READS_STORAGE_KEY, JSON.stringify(updated));
+    return current + 1;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Get read count for a specific article slug or id
+ */
+export function getArticleReadCount(slug: string): number {
+  if (!slug) return 0;
+  const reads = getArticleReads();
+  return reads[slug] || 0;
+}
+
+/**
+ * Reset read count for an article (admin action)
+ */
+export function resetArticleReadCount(slug: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const reads = getArticleReads();
+    delete reads[slug];
+    localStorage.setItem(READS_STORAGE_KEY, JSON.stringify(reads));
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Get tombstone list of deleted default article IDs
+ */
+function getDeletedDefaultIds(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(TOMBSTONE_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
 
 /**
  * Get custom articles saved in localStorage
@@ -109,13 +185,14 @@ export async function getPublishedArticles(): Promise<BlogPostItem[]> {
   const localArticles = getLocalArticles();
   const allLocalIds = new Set(localArticles.map((a) => a.id));
   const allLocalSlugs = new Set(localArticles.map((a) => a.slug));
+  const deletedDefaultIds = getDeletedDefaultIds();
 
   // Custom published articles (drafts and scheduled are excluded)
   const customPublished = localArticles.filter((a) => a.status === 'published');
 
-  // Any base article overridden or unpublished in local storage must NOT be re-published
+  // Any base article overridden, unpublished, or deleted in local storage must NOT be re-published
   const baseFiltered = defaultBlogData
-    .filter((a) => !allLocalIds.has(a.id) && !allLocalSlugs.has(a.slug))
+    .filter((a) => !allLocalIds.has(a.id) && !allLocalSlugs.has(a.slug) && !deletedDefaultIds.has(a.id))
     .map((a) => ({ ...a, isSample: a.isSample ?? true }));
 
   return [...customPublished, ...baseFiltered];
@@ -127,13 +204,14 @@ export async function getPublishedArticles(): Promise<BlogPostItem[]> {
 export async function getAllAdminArticles(): Promise<BlogPostItem[]> {
   const localArticles = getLocalArticles();
   const localMap = new Map<string, BlogPostItem>();
+  const deletedDefaultIds = getDeletedDefaultIds();
 
   localArticles.forEach((a) => localMap.set(a.id, a));
 
-  // Merge with base articles if not already customized
+  // Merge with base articles if not already customized or deleted
   const allArticles: BlogPostItem[] = [...localArticles];
   defaultBlogData.forEach((base) => {
-    if (!localMap.has(base.id)) {
+    if (!localMap.has(base.id) && !deletedDefaultIds.has(base.id)) {
       allArticles.push({ ...base, isSample: base.isSample ?? true });
     }
   });
@@ -259,12 +337,10 @@ export async function deleteArticle(id: string): Promise<{ success: boolean; err
     saveLocalArticles(filtered);
 
     // If deleting a default article, add a tombstone in localStorage
-    const tombstoneKey = 'kjt_deleted_default_articles';
-    const rawTombstones = localStorage.getItem(tombstoneKey);
-    const tombstones: string[] = rawTombstones ? JSON.parse(rawTombstones) : [];
-    if (!tombstones.includes(id)) {
-      tombstones.push(id);
-      localStorage.setItem(tombstoneKey, JSON.stringify(tombstones));
+    const tombstones = getDeletedDefaultIds();
+    if (!tombstones.has(id)) {
+      tombstones.add(id);
+      localStorage.setItem(TOMBSTONE_KEY, JSON.stringify([...tombstones]));
     }
 
     if (isSupabaseConfigured() && supabase) {

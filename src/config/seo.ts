@@ -136,12 +136,12 @@ export const seoConfig: SEOConfig = {
   // 4. BUSINESS CONTACT TELEPHONE & EMAILS
   // ===================================================================
   // CUSTOMIZE HERE: Change the company telephone number.
-  telephone: "+256700000000", // <-- EDIT: Add primary business telephone here (e.g. +256 700 000000)
-  telephoneDisplay: "+256 (0) 700 000 000", // <-- EDIT: Friendly formatted display string
-  secondaryTelephone: "+256750000000", // <-- EDIT: Optional secondary phone line
-  whatsappNumber: "+256700000000", // <-- EDIT: WhatsApp direct line (international format without + or spaces for wa.me)
-  email: "contact@kjttechnologies.com", // <-- EDIT: Main inquiries email
-  supportEmail: "support@kjttechnologies.com", // <-- EDIT: Support/Incident email
+  telephone: "+256767757802", // <-- EDIT: Add primary business telephone here (e.g. +256 700 000000)
+  telephoneDisplay: "+256 767 757 802", // <-- EDIT: Friendly formatted display string
+  secondaryTelephone: "+256708947448", // <-- EDIT: Optional secondary phone line
+  whatsappNumber: "+256708947448", // <-- EDIT: WhatsApp direct line (international format without + or spaces for wa.me)
+  email: "travortechguy@gmail.com", // <-- EDIT: Main inquiries email
+  supportEmail: "travortechguy@gmail.com", // <-- EDIT: Support/Incident email
 
   // ===================================================================
   // 5. PHYSICAL LOCATION & LOCAL SEO DISCOVERABILITY

@@ -41,10 +41,8 @@ import {
   List,
   Mail,
   RefreshCw,
-  Tag,
-  CheckCircle2,
   Newspaper,
-  Phone,
+  Eye,
 } from 'lucide-react';
 import { FaWhatsapp, FaLinkedinIn, FaXTwitter, FaFacebookF } from 'react-icons/fa6';
 import { SEOHead } from '../components/common/SEOHead';
@@ -52,7 +50,7 @@ import { Button } from '../components/common/Button';
 import { NewsletterForm } from '../components/common/NewsletterForm';
 import { ArticleCard } from '../components/blog/ArticleCard';
 import { AuthorAvatar } from '../components/common/AuthorAvatar';
-import { getArticleBySlug, getPublishedArticles } from '../lib/articlesService';
+import { getArticleBySlug, getPublishedArticles, trackArticleRead, getArticleReadCount } from '../lib/articlesService';
 import { BlogPostItem } from '../types';
 import { sanitizeArticleHtml, cleanTitle } from '../lib/contentSanitizer';
 
@@ -65,6 +63,7 @@ export const BlogPostDetailPage: React.FC = () => {
   const [activeTocId, setActiveTocId] = useState<string>('');
   const [mobileTocOpen, setMobileTocOpen] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [readCount, setReadCount] = useState<number>(0);
 
   useEffect(() => {
     const isAuth = typeof window !== 'undefined' && localStorage.getItem('kjt_admin_authenticated') === 'true';
@@ -89,6 +88,15 @@ export const BlogPostDetailPage: React.FC = () => {
 
       setPost(article);
       setAllArticles(published);
+
+      // Track the read — only for published articles viewed by non-admins (or admins too for preview)
+      if (article && article.status === 'published') {
+        const newCount = trackArticleRead(article.slug);
+        setReadCount(newCount);
+      } else if (article) {
+        setReadCount(getArticleReadCount(article.slug));
+      }
+
       setLoading(false);
     };
     load();
@@ -251,6 +259,7 @@ export const BlogPostDetailPage: React.FC = () => {
         type="article"
         image={post.coverImage}
         noIndex={post.status !== 'published'}
+        readCount={readCount}
         article={{
           publishedTime: post.publishedAt,
           modifiedTime: post.updatedAt || post.publishedAt,
@@ -375,6 +384,11 @@ export const BlogPostDetailPage: React.FC = () => {
               <span className="flex items-center gap-1.5 text-slate-300">
                 <Clock className="w-3.5 h-3.5 text-[#00D4FF]" />
                 <span>{post.readTime}</span>
+              </span>
+              <span className="text-slate-600">•</span>
+              <span className="flex items-center gap-1.5 text-slate-300" title="Total reads">
+                <Eye className="w-3.5 h-3.5 text-[#00D4FF]" />
+                <span>{readCount > 0 ? readCount.toLocaleString() : '—'} reads</span>
               </span>
             </div>
           </div>

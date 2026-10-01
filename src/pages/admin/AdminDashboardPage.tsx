@@ -52,6 +52,8 @@ import {
   upsertArticle,
   duplicateArticle,
   batchCleanAllArticles,
+  getArticleReadCount,
+  getArticleReads,
 } from '../../lib/articlesService';
 import { getAllQuotations } from '../../lib/quotationService';
 import { getAllBookings } from '../../lib/consultationService';
@@ -111,6 +113,7 @@ export const AdminDashboardPage: React.FC = () => {
   // New modules counts
   const [quotationCount, setQuotationCount] = useState<number>(0);
   const [consultationCount, setConsultationCount] = useState<number>(0);
+  const [totalReads, setTotalReads] = useState<number>(0);
 
   const supabaseConnected = isSupabaseConfigured();
 
@@ -126,6 +129,10 @@ export const AdminDashboardPage: React.FC = () => {
     } catch {
       // ignore
     }
+    // Compute total reads from localStorage
+    const allReads = getArticleReads();
+    const total = Object.values(allReads).reduce((sum, n) => sum + n, 0);
+    setTotalReads(total);
     setLoading(false);
   };
 
@@ -253,6 +260,7 @@ export const AdminDashboardPage: React.FC = () => {
     }
     localStorage.removeItem('kjt_admin_authenticated');
     localStorage.removeItem('kjt_admin_user_email');
+    localStorage.removeItem('kjt_admin_session_expiry');
     navigate('/admin/login');
   };
 
@@ -411,38 +419,23 @@ USING (true) WITH CHECK (true);`;
         </button>
       </div>
 
-      {/* Overview Stat Counters (Exact 5 cards) */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-            Total Articles
-          </span>
-          <span className="text-2xl font-bold text-white mt-1 block">{stats.total}</span>
-        </div>
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">
-            Published Articles
-          </span>
-          <span className="text-2xl font-bold text-white mt-1 block">{stats.published}</span>
-        </div>
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block">
-            Draft Articles
-          </span>
-          <span className="text-2xl font-bold text-white mt-1 block">{stats.drafts}</span>
-        </div>
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 block">
-            Scheduled Articles
-          </span>
-          <span className="text-2xl font-bold text-white mt-1 block">{stats.scheduled}</span>
-        </div>
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 block">
-            Featured Articles
-          </span>
-          <span className="text-2xl font-bold text-white mt-1 block">{stats.featured}</span>
-        </div>
+      {/* Overview Stat Counters (6 cards) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[
+          { label: 'Total Articles', value: stats.total, color: 'text-white', border: 'border-slate-700' },
+          { label: 'Published', value: stats.published, color: 'text-emerald-400', border: 'border-emerald-500/30' },
+          { label: 'Drafts', value: stats.drafts, color: 'text-amber-400', border: 'border-amber-500/30' },
+          { label: 'Scheduled', value: stats.scheduled, color: 'text-blue-400', border: 'border-blue-500/30' },
+          { label: 'Featured', value: stats.featured, color: 'text-purple-400', border: 'border-purple-500/30' },
+          { label: 'Total Reads', value: totalReads, color: 'text-[#00D4FF]', border: 'border-[#00D4FF]/30' },
+        ].map((s) => (
+          <div key={s.label} className={`bg-slate-900/80 border ${s.border} rounded-xl p-4`}>
+            <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${s.color}`}>
+              {s.label}
+            </span>
+            <span className="text-2xl font-bold text-white block">{s.value.toLocaleString()}</span>
+          </div>
+        ))}
       </div>
 
       {/* Commercial & Engineering Operations Quick Panels */}
@@ -635,10 +628,8 @@ USING (true) WITH CHECK (true);`;
                 {displayedArticles.map((article) => {
                   const status = article.status || 'published';
                   const isSelected = selectedIds.includes(article.id);
-                  // Calculate approximate reads based on id hash for demo realism
-                  const estimatedReads = Math.abs(
-                    article.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 100) * 12
-                  );
+                  // Real read count from localStorage tracking
+                  const realReads = getArticleReadCount(article.slug);
 
                   return (
                     <tr
@@ -702,7 +693,9 @@ USING (true) WITH CHECK (true);`;
                       <td className="py-3 px-4 whitespace-nowrap text-slate-400">
                         <div className="flex items-center gap-1 text-[11px]">
                           <BarChart2 className="w-3 h-3 text-[#00D4FF]" />
-                          <span>{estimatedReads.toLocaleString()}</span>
+                          <span className={realReads > 0 ? 'text-white font-semibold' : 'text-slate-500'}>
+                            {realReads > 0 ? realReads.toLocaleString() : '—'}
+                          </span>
                         </div>
                       </td>
 

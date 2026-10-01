@@ -19,6 +19,7 @@ export interface SEOHeadProps {
   robots?: string;
   noIndex?: boolean; // When true, strictly prevents search engine indexing (noindex, nofollow)
   keywords?: string[];
+  readCount?: number; // Real article read/view count for interactionStatistic schema
   article?: {
     publishedTime: string;
     modifiedTime?: string;
@@ -74,6 +75,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   robots = 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1',
   noIndex = false,
   keywords,
+  readCount,
   article,
   breadcrumbs,
   schemaType = 'WebSite',
@@ -107,6 +109,31 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     updateMetaTag('name', 'keywords', keywordsList);
     updateMetaTag('name', 'author', seoConfig.companyName);
     updateMetaTag('name', 'theme-color', seoConfig.themeColor);
+
+    // 2a. Search Engine Verification tokens (only on root / homepage)
+    if (seoConfig.verification?.googleSiteVerification &&
+      !seoConfig.verification.googleSiteVerification.includes('PLACEHOLDER')) {
+      updateMetaTag('name', 'google-site-verification', seoConfig.verification.googleSiteVerification);
+    }
+    if (seoConfig.verification?.bingVerification &&
+      !seoConfig.verification.bingVerification.includes('PLACEHOLDER')) {
+      updateMetaTag('name', 'msvalidate.01', seoConfig.verification.bingVerification);
+    }
+
+    // 2b. Preconnect / DNS prefetch hints (injected once — skip if already present)
+    const addLinkOnce = (rel: string, href: string, crossorigin?: string) => {
+      const existing = document.head.querySelector(`link[href="${href}"]`);
+      if (!existing) {
+        const el = document.createElement('link');
+        el.rel = rel;
+        el.href = href;
+        if (crossorigin) el.setAttribute('crossorigin', crossorigin);
+        document.head.appendChild(el);
+      }
+    };
+    addLinkOnce('preconnect', 'https://fonts.googleapis.com');
+    addLinkOnce('preconnect', 'https://fonts.gstatic.com', 'anonymous');
+    addLinkOnce('preconnect', 'https://images.unsplash.com');
 
     // 3. Canonical Link (only if page is allowed to be indexed)
     if (!effectiveRobots.includes('noindex')) {
@@ -372,6 +399,15 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
         },
         articleSection: article?.section || 'Technology',
         keywords: article?.tags?.map((t) => cleanTitle(t.replace(/^#+/, ''))).join(', ') || keywordsList,
+        ...(readCount && readCount > 0
+          ? {
+              interactionStatistic: {
+                '@type': 'InteractionCounter',
+                interactionType: { '@type': 'ReadAction' },
+                userInteractionCount: readCount,
+              },
+            }
+          : {}),
       };
 
       graphItems.push(articleSchema);
@@ -401,6 +437,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     effectiveRobots,
     keywordsList,
     resolvedOgType,
+    readCount,
     article,
     breadcrumbs,
     schemaType,

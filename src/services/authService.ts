@@ -34,6 +34,16 @@ export interface AuthResult {
 
 const LOCAL_STORAGE_AUTH_KEY = 'kjt_admin_authenticated';
 const LOCAL_STORAGE_EMAIL_KEY = 'kjt_admin_user_email';
+const LOCAL_STORAGE_EXPIRY_KEY = 'kjt_admin_session_expiry';
+const SESSION_DURATION_MS = 4 * 60 * 60 * 1000; // 4-hour rolling session
+
+/**
+ * Write session expiry timestamp (rolling 4-hour window)
+ */
+function writeSessionExpiry(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(LOCAL_STORAGE_EXPIRY_KEY, String(Date.now() + SESSION_DURATION_MS));
+}
 
 /**
  * Check whether an administrator is currently authenticated
@@ -77,6 +87,7 @@ export async function signInAdmin(email: string, password: string): Promise<Auth
       if (data.session && data.user) {
         localStorage.setItem(LOCAL_STORAGE_AUTH_KEY, 'true');
         localStorage.setItem(LOCAL_STORAGE_EMAIL_KEY, data.user.email || trimmedEmail);
+        writeSessionExpiry();
         return {
           success: true,
           user: {
@@ -100,6 +111,7 @@ export async function signInAdmin(email: string, password: string): Promise<Auth
     if (trimmedPassword.length >= 6) {
       localStorage.setItem(LOCAL_STORAGE_AUTH_KEY, 'true');
       localStorage.setItem(LOCAL_STORAGE_EMAIL_KEY, trimmedEmail);
+      writeSessionExpiry();
       return {
         success: true,
         user: {
@@ -133,6 +145,7 @@ export async function signOutAdmin(): Promise<void> {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(LOCAL_STORAGE_AUTH_KEY);
     localStorage.removeItem(LOCAL_STORAGE_EMAIL_KEY);
+    localStorage.removeItem(LOCAL_STORAGE_EXPIRY_KEY);
   }
 }
 

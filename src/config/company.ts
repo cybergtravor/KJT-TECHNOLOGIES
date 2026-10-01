@@ -195,22 +195,22 @@ export const companyConfig: CompanyConfig = {
 
   // CUSTOMIZE HERE: Enter the KJT TECHNOLOGIES WhatsApp number in international format without +, spaces or brackets.
   // For Uganda numbers, start with 256 (e.g. 256700000000).
-  whatsappNumber: "256700000000",
+  whatsappNumber: "256708947448",
 
   // CUSTOMIZE HERE: Telephone numbers and department emails.
   contact: {
-    primaryPhone: "+256 700 000 000", // Official desk hotline (displayed in header & footer)
-    secondaryPhone: "+256 750 000 000", // Secondary engineering line
-    displayPhone: "+256 (0) 700 000 000", // Nicely formatted for visual display
+    primaryPhone: "+256 767 757 802", // Official desk hotline (displayed in header & footer)
+    secondaryPhone: "+256 708 947 448", // Secondary engineering line / WhatsApp
+    displayPhone: "+256 767 757 802", // Nicely formatted for visual display
 
     // WhatsApp configuration
-    whatsappNumber: "256700000000",
-    whatsappLink: "https://wa.me/256700000000?text=Hello%20KJT%20TECHNOLOGIES%2C%20I%20would%20like%20to%20inquire%20about%20your%20services.",
+    whatsappNumber: "256708947448",
+    whatsappLink: "https://wa.me/256708947448?text=Hello%20KJT%20TECHNOLOGIES%2C%20I%20would%20like%20to%20inquire%20about%20your%20services.",
 
     // Official company email addresses
-    primaryEmail: "contact@kjttechnologies.com",
-    supportEmail: "support@kjttechnologies.com",
-    careersEmail: "careers@kjttechnologies.com",
+    primaryEmail: "travortechguy@gmail.com",
+    supportEmail: "travortechguy@gmail.com",
+    careersEmail: "travortechguy@gmail.com",
   },
 
   // CUSTOMIZE HERE: Physical office location in Kampala, Uganda
@@ -242,7 +242,7 @@ export const companyConfig: CompanyConfig = {
     youtube: "https://youtube.com/@kjttechnologies",
     twitter: "https://x.com/kjt_technologies",
     tiktok: "https://tiktok.com/@kjttechnologies",
-    whatsapp: "https://wa.me/256700000000",
+    whatsapp: "https://wa.me/256708947448",
     github: "https://github.com/kjt-technologies",
   },
 
