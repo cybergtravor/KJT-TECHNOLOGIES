@@ -44,6 +44,7 @@ import { ArticleEditorPage } from './pages/admin/ArticleEditorPage';
 import { MediaLibraryPage } from './pages/admin/MediaLibraryPage';
 import { AdminQuotationsPage } from './pages/admin/AdminQuotationsPage';
 import { AdminConsultationsPage } from './pages/admin/AdminConsultationsPage';
+import { AdminSetupPage } from './pages/admin/AdminSetupPage';
 
 export default function App() {
   return (
@@ -103,6 +104,7 @@ export default function App() {
             Protected behind <AdminLayout /> with session verification.
            ================================================================= */}
         <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin/setup" element={<AdminSetupPage />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />

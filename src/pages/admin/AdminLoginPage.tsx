@@ -2,17 +2,13 @@
  * =====================================================================
  * ADMIN LOGIN - KJT TECHNOLOGIES CMS
  * =====================================================================
- * 
- * Secure administrator login backed by Supabase Authentication.
- * 
+ *
  * SECURITY CONTROLS:
  * - Rate limiting: Max 5 failed attempts per session with 60s cooldown
  * - Session expiry tracking (4 hours maximum session lifetime)
- * - Safe generic error messages to prevent account enumeration
- * - Password recovery flow via Supabase Auth
- * - Strict noindex metadata for search engines
- * - Never stores plain-text passwords
- * - Fallback testing mode with guidance if Supabase is unconfigured
+ * - Real Supabase error messages surfaced for easier diagnosing
+ * - Fallback demo mode when Supabase is not configured
+ * - Strict noindex — never indexed by search engines
  * =====================================================================
  */
 
@@ -31,6 +27,8 @@ import {
   ArrowLeft,
   KeyRound,
   CheckCircle2,
+  WifiOff,
+  Settings,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { BrandLogo } from '../../components/common/BrandLogo';
@@ -48,12 +46,12 @@ export const AdminLoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  
-  // Rate limiting states
+
+  // Rate limiting
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutRemaining, setLockoutRemaining] = useState(0);
-  
-  // Password Recovery modal
+
+  // Password recovery
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryLoading, setRecoveryLoading] = useState(false);
@@ -62,7 +60,24 @@ export const AdminLoginPage: React.FC = () => {
 
   const supabaseReady = isSupabaseConfigured();
 
-  // Handle lockout countdown timer
+  // Redirect if already logged in
+  useEffect(() => {
+    const isAuth = localStorage.getItem('kjt_admin_authenticated');
+    const expiryStr = localStorage.getItem('kjt_admin_session_expiry');
+    if (isAuth === 'true') {
+      if (expiryStr) {
+        const expiry = parseInt(expiryStr, 10);
+        if (!isNaN(expiry) && Date.now() < expiry) {
+          navigate('/admin/dashboard', { replace: true });
+          return;
+        }
+      } else {
+        navigate('/admin/dashboard', { replace: true });
+      }
+    }
+  }, [navigate]);
+
+  // Lockout countdown
   useEffect(() => {
     if (lockoutRemaining <= 0) return;
     const interval = setInterval(() => {
@@ -89,14 +104,13 @@ export const AdminLoginPage: React.FC = () => {
     const emailTrimmed = email.trim().toLowerCase();
     const passwordTrimmed = password.trim();
 
-    // Input length limits
     if (emailTrimmed.length > 150 || passwordTrimmed.length > 100) {
       setErrorMsg('Invalid credentials length.');
       setLoading(false);
       return;
     }
 
-    // 1. Authenticate with Supabase Auth if credentials are configured
+    // ── Supabase Auth ────────────────────────────────────────────────
     if (supabaseReady && supabase) {
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -105,50 +119,64 @@ export const AdminLoginPage: React.FC = () => {
         });
 
         if (error) {
-          const newFailCount = failedAttempts + 1;
-          setFailedAttempts(newFailCount);
-          if (newFailCount >= MAX_FAILED_ATTEMPTS) {
+          const newFail = failedAttempts + 1;
+          setFailedAttempts(newFail);
+          if (newFail >= MAX_FAILED_ATTEMPTS) {
             setLockoutRemaining(LOCKOUT_SECONDS);
-            setErrorMsg(`Too many failed login attempts. Temporarily locked for ${LOCKOUT_SECONDS} seconds.`);
+            setErrorMsg(
+              `Too many failed attempts. Try again in ${LOCKOUT_SECONDS} seconds.`
+            );
           } else {
-            setErrorMsg('Invalid email or password. Please verify your credentials.');
+            // Show the real Supabase error — crucial for diagnosing production issues
+            setErrorMsg(
+              error.message === 'Invalid login credentials'
+                ? 'Incorrect email or password. Make sure you have created an account in your Supabase dashboard under Authentication → Users.'
+                : error.message
+            );
           }
           setLoading(false);
           return;
         }
 
         if (data.session) {
-          // Store session timestamp for expiry validation
-          const expiryTime = Date.now() + SESSION_DURATION_HOURS * 60 * 60 * 1000;
+          const expiryTime =
+            Date.now() + SESSION_DURATION_HOURS * 60 * 60 * 1000;
           localStorage.setItem('kjt_admin_authenticated', 'true');
           localStorage.setItem('kjt_admin_user_email', emailTrimmed);
-          localStorage.setItem('kjt_admin_session_expiry', expiryTime.toString());
-          navigate('/admin/dashboard');
+          localStorage.setItem('kjt_admin_session_expiry', String(expiryTime));
+          navigate('/admin/dashboard', { replace: true });
           return;
         }
       } catch (err: any) {
-        setErrorMsg('Authentication service temporarily unavailable. Please try again.');
+        // Network-level failure — Supabase unreachable
+        setErrorMsg(
+          'Cannot reach authentication server. Check that your Supabase URL and anon key are set in your Vercel environment variables.'
+        );
         setLoading(false);
         return;
       }
     }
 
-    // 2. Demo fallback when Supabase is not yet configured
+    // ── Demo / preview fallback ──────────────────────────────────────
     if (!supabaseReady) {
       if (emailTrimmed && passwordTrimmed.length >= 8) {
         const expiryTime = Date.now() + SESSION_DURATION_HOURS * 60 * 60 * 1000;
         localStorage.setItem('kjt_admin_authenticated', 'true');
         localStorage.setItem('kjt_admin_user_email', emailTrimmed);
-        localStorage.setItem('kjt_admin_session_expiry', expiryTime.toString());
-        navigate('/admin/dashboard');
+        localStorage.setItem('kjt_admin_session_expiry', String(expiryTime));
+        navigate('/admin/dashboard', { replace: true });
       } else {
-        const newFailCount = failedAttempts + 1;
-        setFailedAttempts(newFailCount);
-        if (newFailCount >= MAX_FAILED_ATTEMPTS) {
+        const newFail = failedAttempts + 1;
+        setFailedAttempts(newFail);
+        if (newFail >= MAX_FAILED_ATTEMPTS) {
           setLockoutRemaining(LOCKOUT_SECONDS);
-          setErrorMsg(`Too many failed login attempts. Temporarily locked for ${LOCKOUT_SECONDS} seconds.`);
+          setErrorMsg(
+            `Too many failed attempts. Try again in ${LOCKOUT_SECONDS} seconds.`
+          );
         } else {
-          setErrorMsg('Password must be at least 8 characters for administrative security.');
+          setErrorMsg(
+            'In demo mode (Supabase not configured), password must be at least 8 characters.'
+          );
         }
       }
     }
@@ -171,35 +199,40 @@ export const AdminLoginPage: React.FC = () => {
 
     if (supabaseReady && supabase) {
       try {
-        const { error } = await supabase.auth.resetPasswordForEmail(emailToReset, {
-          redirectTo: `${window.location.origin}/admin/login`,
+        const productionUrl =
+          (import.meta as any).env?.VITE_SITE_URL ||
+          window.location.origin;
+        await supabase.auth.resetPasswordForEmail(emailToReset, {
+          redirectTo: `${productionUrl}/admin/login`,
         });
-        if (error) {
-          // Do not leak whether the email exists in Supabase
-          setRecoveryMessage('If an administrator account exists with this email, a password reset link has been dispatched.');
-        } else {
-          setRecoveryMessage('Password reset link has been sent to your email. Please check your inbox.');
-        }
-      } catch (err) {
-        setRecoveryMessage('Password reset request processed. If this email is registered, instructions have been sent.');
+        setRecoveryMessage(
+          'If an account exists for this email, a reset link has been sent. Check your inbox (and spam folder).'
+        );
+      } catch {
+        setRecoveryMessage(
+          'Password reset request processed. If this email is registered, instructions have been sent.'
+        );
       }
     } else {
-      setRecoveryMessage('Supabase Auth is not currently configured. Once Supabase is connected, a password reset link will be sent automatically.');
+      setRecoveryMessage(
+        'Supabase Auth is not configured. Once your environment variables are set on Vercel, password resets will work automatically.'
+      );
     }
 
     setRecoveryLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-[#071324] text-slate-200 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen bg-[#071324] text-slate-200 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <SEOHead
         title="Website Administration | KJT TECHNOLOGIES"
-        description="Authorized Content Management System login portal for KJT TECHNOLOGIES."
-        noIndex={true} // Strict SEO instruction: prevent search engine indexing of admin
+        description="Authorized Content Management System login for KJT TECHNOLOGIES."
+        noIndex={true}
       />
 
-      {/* Decorative background grid */}
+      {/* Background dot grid */}
       <div
+        aria-hidden="true"
         className="absolute inset-0 opacity-10 pointer-events-none"
         style={{
           backgroundImage: 'radial-gradient(#00D4FF 1px, transparent 1px)',
@@ -207,6 +240,7 @@ export const AdminLoginPage: React.FC = () => {
         }}
       />
 
+      {/* Brand + title */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 space-y-4 text-center">
         <div className="flex justify-center">
           <BrandLogo size="lg" />
@@ -221,18 +255,30 @@ export const AdminLoginPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Card */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="bg-slate-900/90 py-8 px-6 sm:px-10 rounded-2xl border border-slate-800 shadow-2xl space-y-6">
-          {/* Supabase Status Banner */}
+        <div className="bg-slate-900/90 py-8 px-6 sm:px-10 rounded-2xl border border-slate-800 shadow-2xl space-y-5">
+
+          {/* ── Connection status banner ────────────────────────────── */}
           {!supabaseReady ? (
             <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs space-y-1.5">
               <div className="flex items-center gap-2 font-bold">
-                <Info className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span>Supabase Configuration Notice</span>
+                <WifiOff className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span>Supabase Not Configured</span>
               </div>
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                Supabase credentials (<code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code>) are placeholders in <code>.env.example</code>. For local testing, you can sign in with your email and any 8+ character password. Once Supabase is connected, authentication is verified live via Supabase Auth.
+                The environment variables <code className="bg-slate-800 px-1 rounded">VITE_SUPABASE_URL</code> and{' '}
+                <code className="bg-slate-800 px-1 rounded">VITE_SUPABASE_ANON_KEY</code> are not set on this
+                deployment. You can still log in using any email and a password of 8+ characters (demo mode), but
+                articles will only be saved to this browser's localStorage.
               </p>
+              <Link
+                to="/admin/setup"
+                className="inline-flex items-center gap-1 text-[#00D4FF] hover:underline font-semibold text-[11px]"
+              >
+                <Settings className="w-3 h-3" />
+                Open Setup &amp; Diagnostics →
+              </Link>
             </div>
           ) : (
             <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
@@ -241,23 +287,39 @@ export const AdminLoginPage: React.FC = () => {
             </div>
           )}
 
-          {/* Lockout Banner */}
+          {/* ── Lockout banner ─────────────────────────────────────── */}
           {lockoutRemaining > 0 && (
             <div className="p-3.5 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-400" />
               <span>
-                Rate limit reached. Login locked for <strong>{lockoutRemaining}s</strong> to protect against brute force attacks.
+                Login locked for <strong>{lockoutRemaining}s</strong> — too many failed attempts.
               </span>
             </div>
           )}
 
+          {/* ── Error ──────────────────────────────────────────────── */}
           {errorMsg && lockoutRemaining === 0 && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{errorMsg}</span>
+            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-400" />
+                <span className="leading-relaxed">{errorMsg}</span>
+              </div>
+              {/* Guide to setup page if it looks like a config issue */}
+              {(errorMsg.includes('environment') ||
+                errorMsg.includes('Supabase') ||
+                errorMsg.includes('server')) && (
+                <Link
+                  to="/admin/setup"
+                  className="inline-flex items-center gap-1 text-[#00D4FF] hover:underline font-semibold pl-6"
+                >
+                  <Settings className="w-3 h-3" />
+                  Run diagnostics →
+                </Link>
+              )}
             </div>
           )}
 
+          {/* ── Success ────────────────────────────────────────────── */}
           {successMsg && (
             <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
@@ -265,6 +327,7 @@ export const AdminLoginPage: React.FC = () => {
             </div>
           )}
 
+          {/* ── Login form ─────────────────────────────────────────── */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
@@ -280,7 +343,7 @@ export const AdminLoginPage: React.FC = () => {
                   maxLength={150}
                   required
                   disabled={lockoutRemaining > 0}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-[#00D4FF] disabled:opacity-50"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-[#00D4FF] disabled:opacity-50 transition-colors"
                 />
               </div>
             </div>
@@ -308,21 +371,17 @@ export const AdminLoginPage: React.FC = () => {
                   maxLength={100}
                   required
                   disabled={lockoutRemaining > 0}
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-[#00D4FF] disabled:opacity-50"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-[#00D4FF] disabled:opacity-50 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition cursor-pointer p-1"
-                  title={showPassword ? 'Hide password' : 'Show password'}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <p className="text-[10px] text-slate-500">
-                Minimum 8 characters with numbers and symbols recommended.
-              </p>
             </div>
 
             <button
@@ -333,7 +392,7 @@ export const AdminLoginPage: React.FC = () => {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Verifying Session...</span>
+                  <span>Verifying...</span>
                 </>
               ) : (
                 <>
@@ -344,7 +403,8 @@ export const AdminLoginPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs">
+          {/* ── Footer row ─────────────────────────────────────────── */}
+          <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
             <Link
               to="/"
               className="text-slate-400 hover:text-[#00D4FF] transition inline-flex items-center gap-1.5"
@@ -352,22 +412,29 @@ export const AdminLoginPage: React.FC = () => {
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Website</span>
             </Link>
-            <span className="text-[10px] text-slate-500">Session auto-expires after 4h</span>
+            <Link
+              to="/admin/setup"
+              className="text-slate-500 hover:text-[#00D4FF] transition inline-flex items-center gap-1 text-[11px]"
+            >
+              <Settings className="w-3 h-3" />
+              <span>Diagnostics</span>
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Password Recovery Modal */}
+      {/* ── Password recovery modal ──────────────────────────────────── */}
       {showRecoveryModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
             <div className="flex items-center gap-2.5 text-white">
               <KeyRound className="w-5 h-5 text-[#00D4FF]" />
               <h3 className="text-base font-bold">Administrator Password Reset</h3>
             </div>
-            
+
             <p className="text-xs text-slate-300 leading-relaxed">
-              Enter your registered administrator email address below. A secure, time-limited password recovery link will be sent to your inbox.
+              Enter your registered administrator email. A secure, time-limited reset link will
+              be sent to your inbox.
             </p>
 
             {recoveryMessage && (
@@ -376,7 +443,6 @@ export const AdminLoginPage: React.FC = () => {
                 <span>{recoveryMessage}</span>
               </div>
             )}
-
             {recoveryError && (
               <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-xl flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
@@ -398,7 +464,6 @@ export const AdminLoginPage: React.FC = () => {
                   className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#00D4FF]"
                 />
               </div>
-
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
@@ -417,10 +482,7 @@ export const AdminLoginPage: React.FC = () => {
                   className="px-4 py-2 rounded-xl bg-[#00D4FF] hover:bg-[#00b8dc] text-[#0A192F] font-bold text-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {recoveryLoading ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Sending...</span>
-                    </>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
                     <span>Send Reset Link</span>
                   )}
