@@ -298,18 +298,24 @@ export const ArticleEditorPage: React.FC = () => {
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawVal = e.target.value;
-    // Auto-clean hashtags and invalid characters using cleanTitle
-    const cleanedTitle = cleanTitle(rawVal);
+
+    // During live typing: only strip hashtags (do NOT trim or collapse spaces —
+    // that would prevent the user from typing spaces between words).
+    const liveTitle = rawVal.replace(/#+/g, '');
+
     validateTitle(rawVal);
     setIsDirty(true);
 
-    const generatedSlug = generateCleanSlug(cleanedTitle);
+    // Generate slug from a trimmed version for preview, but store the live value so
+    // trailing spaces (needed while typing the next word) are preserved.
+    const trimmedForSlug = liveTitle.trim();
+    const generatedSlug = generateCleanSlug(trimmedForSlug);
 
     setFormData((prev) => ({
       ...prev,
-      title: cleanedTitle,
+      title: liveTitle,
       slug: prev.slug || generatedSlug,
-      seoTitle: prev.seoTitle || (cleanedTitle ? `${cleanedTitle} | KJT TECHNOLOGIES` : ''),
+      seoTitle: prev.seoTitle || (trimmedForSlug ? `${trimmedForSlug} | KJT TECHNOLOGIES` : ''),
     }));
   };
 
