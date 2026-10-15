@@ -216,13 +216,15 @@ export async function sendNewsletterSubscriptionEmail(
       body: JSON.stringify({ email: trimmed }),
     });
 
-    const data: any = await res.json().catch(() => ({}));
+    // Parse response regardless of status so we can surface the exact error
+    const data: any = await res.json().catch(() => ({ error: `HTTP ${res.status} — empty response` }));
 
     if (!res.ok) {
-      return { success: false, error: data?.error || `Server error ${res.status}` };
+      const message = data?.error || data?.message || `Server responded with HTTP ${res.status}`;
+      return { success: false, error: message };
     }
   } catch (err: any) {
-    return { success: false, error: err?.message || 'Network error. Please try again.' };
+    return { success: false, error: `Could not reach /api/newsletter-subscribe: ${err?.message || 'network error'}` };
   }
 
   // ── Step 2: Non-blocking admin notification ────────────────────────
