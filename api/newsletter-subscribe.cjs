@@ -1,8 +1,8 @@
-'use strict';
+﻿'use strict';
 
 /**
  * =====================================================================
- * Vercel Serverless Function — Newsletter Welcome Email
+ * Vercel Serverless Function â€” Newsletter Welcome Email
  * POST /api/newsletter-subscribe
  * =====================================================================
  * Uses Resend (https://resend.com) to send a professional HTML email
@@ -19,7 +19,7 @@ var https = require('https');
 
 var EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
-// ── HTML email builder ────────────────────────────────────────────────
+// â”€â”€ HTML email builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function buildHtml(email, siteUrl, year) {
   var u = (siteUrl || 'https://kjttechnologies.com').replace(/\/$/, '');
 
@@ -122,7 +122,7 @@ function buildHtml(email, siteUrl, year) {
 function buildPlainText(email, siteUrl, year) {
   var u = (siteUrl || 'https://kjttechnologies.com').replace(/\/$/, '');
   return [
-    'KJT TECHNOLOGIES — Technology Digest',
+    'KJT TECHNOLOGIES â€” Technology Digest',
     'Accelerating Innovation, Securing Data.',
     '',
     'Hello,',
@@ -134,28 +134,28 @@ function buildPlainText(email, siteUrl, year) {
     '',
     'WHAT YOU\'LL RECEIVE EVERY MONTH:',
     '',
-    '  * Cybersecurity Advisories — monthly threat briefings and zero-day alerts',
-    '  * Software Engineering — architecture deep-dives and best practices',
-    '  * Cloud & Infrastructure — AWS, Azure, GCP, and DevOps tips',
-    '  * Networking & CCTV — IP surveillance and enterprise Wi-Fi guides',
-    '  * KJT News & Offers — case studies and exclusive subscriber offers',
+    '  * Cybersecurity Advisories â€” monthly threat briefings and zero-day alerts',
+    '  * Software Engineering â€” architecture deep-dives and best practices',
+    '  * Cloud & Infrastructure â€” AWS, Azure, GCP, and DevOps tips',
+    '  * Networking & CCTV â€” IP surveillance and enterprise Wi-Fi guides',
+    '  * KJT News & Offers â€” case studies and exclusive subscriber offers',
     '',
     'One focused edition per month. No filler, no spam.',
     '',
     'Browse our latest articles: ' + u + '/blog',
     '',
-    '────────────────────────────────────',
+    'â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€',
     'KJT TECHNOLOGIES',
     'Plot 18 Lumumba Avenue, Level 4 Innovation Towers, Kampala, Uganda',
     '+256 767 757 802  |  ' + u,
     '',
     'You subscribed with: ' + email,
     'To unsubscribe reply with UNSUBSCRIBE in the subject line.',
-    '© ' + year + ' KJT Technologies Solutions Ltd.',
+    'Â© ' + year + ' KJT Technologies Solutions Ltd.',
   ].join('\n');
 }
 
-// ── HTTP helper using Node built-ins ─────────────────────────────────
+// â”€â”€ HTTP helper using Node built-ins â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function postJson(hostname, path, headers, payload) {
   return new Promise(function (resolve, reject) {
     var body = JSON.stringify(payload);
@@ -185,61 +185,63 @@ function postJson(hostname, path, headers, payload) {
   });
 }
 
-// ── Handler ───────────────────────────────────────────────────────────
+// â”€â”€ Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
-
-  // Parse body
-  var body = req.body;
-  if (typeof body === 'string') {
-    try { body = JSON.parse(body); } catch (e) {
-      return res.status(400).json({ success: false, error: 'Invalid JSON' });
-    }
-  }
-
-  // Also handle raw stream body (some Vercel runtimes don't auto-parse)
-  if (!body || typeof body !== 'object') {
-    try {
-      body = await new Promise(function (resolve, reject) {
-        var chunks = [];
-        req.on('data', function (c) { chunks.push(c); });
-        req.on('end', function () {
-          try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
-          catch (e) { reject(e); }
-        });
-        req.on('error', reject);
-      });
-    } catch (e) {
-      return res.status(400).json({ success: false, error: 'Could not parse request body' });
-    }
-  }
-
-  var email = String((body && body.email) || '').trim().toLowerCase();
-
-  if (!email || !EMAIL_REGEX.test(email)) {
-    return res.status(400).json({ success: false, error: 'Valid email required' });
-  }
-
-  var resendKey = process.env.RESEND_API_KEY || '';
-
-  if (!resendKey || resendKey.length < 10 || resendKey.indexOf('re_') !== 0) {
-    console.warn('[newsletter] RESEND_API_KEY not configured. Subscriber:', email);
-    return res.status(200).json({ success: true, note: 'key-not-configured' });
-  }
-
-  var siteUrl = process.env.VITE_SITE_URL || 'https://kjttechnologies.com';
-  var year    = new Date().getFullYear();
-  var from    = 'KJT TECHNOLOGIES <onboarding@resend.dev>';
-
-  // If you have a verified domain on Resend, replace the `from` above with:
-  // var from = 'KJT TECHNOLOGIES <noreply@kjttechnologies.com>';
-
+  // Top-level guard â€” ensures any unexpected throw returns JSON, not a blank 500
   try {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') return res.status(204).end();
+    if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
+
+    // Parse body â€” Vercel auto-parses JSON bodies, but handle edge cases
+    var body = req.body;
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch (e) {
+        return res.status(400).json({ success: false, error: 'Invalid JSON' });
+      }
+    }
+
+    // Raw stream fallback
+    if (!body || typeof body !== 'object') {
+      try {
+        body = await new Promise(function (resolve, reject) {
+          var chunks = [];
+          req.on('data', function (c) { chunks.push(c); });
+          req.on('end', function () {
+            try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
+            catch (e) { reject(e); }
+          });
+          req.on('error', reject);
+        });
+      } catch (e) {
+        return res.status(400).json({ success: false, error: 'Could not parse request body' });
+      }
+    }
+
+    var email = String((body && body.email) || '').trim().toLowerCase();
+
+    if (!email || !EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ success: false, error: 'Valid email required' });
+    }
+
+    var resendKey = process.env.RESEND_API_KEY || '';
+
+    if (!resendKey || resendKey.length < 10 || resendKey.indexOf('re_') !== 0) {
+      console.warn('[newsletter] RESEND_API_KEY not configured. Subscriber:', email);
+      // Return 200 so the subscribe button doesn't show an error to the user
+      return res.status(200).json({ success: true, note: 'key-not-configured' });
+    }
+
+    var siteUrl = process.env.VITE_SITE_URL || 'https://kjttechnologies.com';
+    var year    = new Date().getFullYear();
+    var from    = 'KJT TECHNOLOGIES <onboarding@resend.dev>';
+
+    // â”€â”€ If you have a verified domain in Resend, change `from` to: â”€â”€
+    // var from = 'KJT TECHNOLOGIES <noreply@kjttechnologies.com>';
+
     var result = await postJson(
       'api.resend.com',
       '/emails',
@@ -264,7 +266,8 @@ module.exports = async function handler(req, res) {
     return res.status(502).json({ success: false, error: errMsg });
 
   } catch (err) {
-    console.error('[newsletter] Network error:', err && err.message);
-    return res.status(500).json({ success: false, error: 'Internal server error' });
+    // Catch-all - logs the real error and returns a clean JSON response
+    console.error('[newsletter] Unhandled error:', err && err.message, err && err.stack);
+    return res.status(500).json({ success: false, error: 'Internal server error: ' + (err && err.message || 'unknown') });
   }
 };
