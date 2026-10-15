@@ -92,6 +92,20 @@ export const AdminLayout: React.FC = () => {
     }
   }, [navigate, handleLogout]);
 
+  // ── Periodic expiry check every 5 minutes ────────────────────────────
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const expiryStr = localStorage.getItem('kjt_admin_session_expiry');
+      if (expiryStr) {
+        const expiry = parseInt(expiryStr, 10);
+        if (!isNaN(expiry) && Date.now() > expiry) {
+          handleLogout();
+        }
+      }
+    }, 5 * 60 * 1000); // every 5 minutes
+    return () => clearInterval(interval);
+  }, [handleLogout]);
+
   const navItems = [
     { label: 'Articles', path: '/admin/dashboard', icon: FileText },
     { label: 'Quotations', path: '/admin/quotations', icon: Calculator },

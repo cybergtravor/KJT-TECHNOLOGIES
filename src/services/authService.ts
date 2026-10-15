@@ -105,25 +105,31 @@ export async function signInAdmin(email: string, password: string): Promise<Auth
     }
   }
 
-  // 2. Demo / Preview fallback mode when Supabase is not yet configured
-  // Allows testing dashboard views before database credentials are provisioned
+  // 2. Demo / Preview fallback mode — ONLY allowed in local development
+  // In production (Supabase not configured), deny access outright rather
+  // than granting it to anyone with a short password.
   if (!isSupabaseConfigured()) {
-    if (trimmedPassword.length >= 6) {
+    const isDev = (import.meta as any).env?.DEV === true;
+    if (!isDev) {
+      return {
+        success: false,
+        error:
+          'Authentication service is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your Vercel environment variables and redeploy.',
+      };
+    }
+    // Local dev only — allow any email + 8+ char password so the UI can be tested
+    if (trimmedPassword.length >= 8) {
       localStorage.setItem(LOCAL_STORAGE_AUTH_KEY, 'true');
       localStorage.setItem(LOCAL_STORAGE_EMAIL_KEY, trimmedEmail);
       writeSessionExpiry();
       return {
         success: true,
-        user: {
-          id: 'demo-admin-id',
-          email: trimmedEmail,
-          role: 'administrator',
-        },
+        user: { id: 'dev-admin-id', email: trimmedEmail, role: 'administrator' },
       };
     }
     return {
       success: false,
-      error: 'In preview mode, password must be at least 6 characters.',
+      error: 'In local dev mode, password must be at least 8 characters.',
     };
   }
 

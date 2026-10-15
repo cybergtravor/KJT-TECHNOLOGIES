@@ -38,6 +38,37 @@ const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_SECONDS = 60;
 const SESSION_DURATION_HOURS = 4;
 
+const RATE_LIMIT_KEY = 'kjt_login_fail_count';
+const LOCKOUT_UNTIL_KEY = 'kjt_login_lockout_until';
+
+/** Read persisted failed-attempt count from sessionStorage */
+function getStoredFailCount(): number {
+  const raw = sessionStorage.getItem(RATE_LIMIT_KEY);
+  return raw ? parseInt(raw, 10) || 0 : 0;
+}
+
+/** Persist failed-attempt count to sessionStorage */
+function setStoredFailCount(n: number): void {
+  sessionStorage.setItem(RATE_LIMIT_KEY, String(n));
+}
+
+/** Read lockout-until timestamp (ms) from sessionStorage */
+function getLockoutUntil(): number {
+  const raw = sessionStorage.getItem(LOCKOUT_UNTIL_KEY);
+  return raw ? parseInt(raw, 10) || 0 : 0;
+}
+
+/** Set lockout-until timestamp */
+function setLockoutUntil(ts: number): void {
+  sessionStorage.setItem(LOCKOUT_UNTIL_KEY, String(ts));
+}
+
+/** Clear rate limit state (after successful login or lockout expiry) */
+function clearRateLimit(): void {
+  sessionStorage.removeItem(RATE_LIMIT_KEY);
+  sessionStorage.removeItem(LOCKOUT_UNTIL_KEY);
+}
+
 export const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -47,9 +78,14 @@ export const AdminLoginPage: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Rate limiting
-  const [failedAttempts, setFailedAttempts] = useState(0);
-  const [lockoutRemaining, setLockoutRemaining] = useState(0);
+  // Rate limiting — seeded from sessionStorage so page refresh doesn't reset it
+  const [failedAttempts, setFailedAttempts] = useState(() => getStoredFailCount());
+  const [lockoutRemaining, setLockoutRemaining] = useState(() => {
+    const until = getLockoutUntil();
+    if (!until) return 0;
+    const remaining = Math.ceil((until - Date.now()) / 1000);
+    return remaining > 0 ? remaining : 0;
+  });
 
   // Password recovery
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
@@ -77,7 +113,7 @@ export const AdminLoginPage: React.FC = () => {
     }
   }, [navigate]);
 
-  // Lockout countdown
+  // Lockout countdown — also updates sessionStorage
   useEffect(() => {
     if (lockoutRemaining <= 0) return;
     const interval = setInterval(() => {
@@ -85,6 +121,7 @@ export const AdminLoginPage: React.FC = () => {
         if (prev <= 1) {
           clearInterval(interval);
           setFailedAttempts(0);
+          clearRateLimit();
           return 0;
         }
         return prev - 1;
@@ -121,13 +158,13 @@ export const AdminLoginPage: React.FC = () => {
         if (error) {
           const newFail = failedAttempts + 1;
           setFailedAttempts(newFail);
+          setStoredFailCount(newFail);
           if (newFail >= MAX_FAILED_ATTEMPTS) {
+            const lockUntil = Date.now() + LOCKOUT_SECONDS * 1000;
+            setLockoutUntil(lockUntil);
             setLockoutRemaining(LOCKOUT_SECONDS);
-            setErrorMsg(
-              `Too many failed attempts. Try again in ${LOCKOUT_SECONDS} seconds.`
-            );
+            setErrorMsg(`Too many failed attempts. Try again in ${LOCKOUT_SECONDS} seconds.`);
           } else {
-            // Show the real Supabase error — crucial for diagnosing production issues
             setErrorMsg(
               error.message === 'Invalid login credentials'
                 ? 'Incorrect email or password. Make sure you have created an account in your Supabase dashboard under Authentication → Users.'
@@ -139,11 +176,11 @@ export const AdminLoginPage: React.FC = () => {
         }
 
         if (data.session) {
-          const expiryTime =
-            Date.now() + SESSION_DURATION_HOURS * 60 * 60 * 1000;
+          const expiryTime = Date.now() + SESSION_DURATION_HOURS * 60 * 60 * 1000;
           localStorage.setItem('kjt_admin_authenticated', 'true');
           localStorage.setItem('kjt_admin_user_email', emailTrimmed);
           localStorage.setItem('kjt_admin_session_expiry', String(expiryTime));
+          clearRateLimit();
           navigate('/admin/dashboard', { replace: true });
           return;
         }
@@ -157,26 +194,25 @@ export const AdminLoginPage: React.FC = () => {
       }
     }
 
-    // ── Demo / preview fallback ──────────────────────────────────────
     if (!supabaseReady) {
       if (emailTrimmed && passwordTrimmed.length >= 8) {
         const expiryTime = Date.now() + SESSION_DURATION_HOURS * 60 * 60 * 1000;
         localStorage.setItem('kjt_admin_authenticated', 'true');
         localStorage.setItem('kjt_admin_user_email', emailTrimmed);
         localStorage.setItem('kjt_admin_session_expiry', String(expiryTime));
+        clearRateLimit();
         navigate('/admin/dashboard', { replace: true });
       } else {
         const newFail = failedAttempts + 1;
         setFailedAttempts(newFail);
+        setStoredFailCount(newFail);
         if (newFail >= MAX_FAILED_ATTEMPTS) {
+          const lockUntil = Date.now() + LOCKOUT_SECONDS * 1000;
+          setLockoutUntil(lockUntil);
           setLockoutRemaining(LOCKOUT_SECONDS);
-          setErrorMsg(
-            `Too many failed attempts. Try again in ${LOCKOUT_SECONDS} seconds.`
-          );
+          setErrorMsg(`Too many failed attempts. Try again in ${LOCKOUT_SECONDS} seconds.`);
         } else {
-          setErrorMsg(
-            'In demo mode (Supabase not configured), password must be at least 8 characters.'
-          );
+          setErrorMsg('In demo mode (Supabase not configured), password must be at least 8 characters.');
         }
       }
     }

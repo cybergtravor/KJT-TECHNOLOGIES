@@ -383,6 +383,7 @@ export async function updateQuotation(
 
 /**
  * Delete a quotation request (admin only)
+ * Returns true if local deletion succeeded, regardless of cloud outcome.
  */
 export async function deleteQuotation(id: string): Promise<boolean> {
   const localList = getLocalQuotations();
@@ -391,7 +392,10 @@ export async function deleteQuotation(id: string): Promise<boolean> {
 
   if (isSupabaseConfigured() && supabase) {
     try {
-      await supabase.from('quotation_requests').delete().eq('id', id);
+      const { error } = await supabase.from('quotation_requests').delete().eq('id', id);
+      if (error) {
+        console.warn('Supabase quotation delete error:', error.message);
+      }
     } catch (e) {
       console.warn('Supabase delete error:', e);
     }

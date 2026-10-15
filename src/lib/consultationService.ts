@@ -568,13 +568,17 @@ export async function updateBookingStatus(
 
   if (isSupabaseConfigured() && supabase) {
     try {
-      const updates: any = {
-        status,
-        updated_at: new Date().toISOString(),
-      };
+      const updates: any = { status, updated_at: new Date().toISOString() };
       if (adminNotes !== undefined) updates.admin_notes = adminNotes;
 
-      await supabase.from('consultation_bookings').update(updates).eq('id', id);
+      const { error } = await supabase
+        .from('consultation_bookings')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) {
+        console.warn('Supabase booking update error:', error.message);
+      }
     } catch (e) {
       console.warn('Supabase booking update notice:', e);
     }

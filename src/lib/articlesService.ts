@@ -315,7 +315,7 @@ export async function upsertArticle(article: BlogPostItem): Promise<{ success: b
         event_date: cleanArticle.eventDate,
       };
 
-      const { error } = await supabase.from('articles').upsert(dbPayload);
+      const { error } = await supabase.from('articles').upsert(dbPayload, { onConflict: 'id' });
       if (error) {
         console.warn('Supabase upsert returned error (saved to local storage):', error.message);
       }
@@ -344,7 +344,12 @@ export async function deleteArticle(id: string): Promise<{ success: boolean; err
     }
 
     if (isSupabaseConfigured() && supabase) {
-      await supabase.from('articles').delete().eq('id', id);
+      const { error: deleteError } = await supabase.from('articles').delete().eq('id', id);
+      if (deleteError) {
+        console.warn('Supabase article delete error:', deleteError.message);
+        // Note: local state is already cleaned — the article won't reappear
+        // because the tombstone prevents the default list from restoring it.
+      }
     }
 
     return { success: true };
