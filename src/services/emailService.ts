@@ -3,15 +3,20 @@
  * EMAIL NOTIFICATION SERVICE - KJT TECHNOLOGIES
  * =====================================================================
  *
- * Central email and webhook dispatch layer supporting flexible providers:
- *  1. Web3Forms — contact form, quotation, consultation notifications (client-safe public key)
- *  2. /api/newsletter-subscribe — Vercel serverless function holding the private BREVO_API_KEY
+ * Dispatch layer for all outbound email across the website:
  *
- * SECURITY:
- *  - BREVO_API_KEY is a PRIVATE key and must NEVER be prefixed with VITE_.
- *    It lives only in Vercel project environment variables (server-side).
- *  - All Brevo calls go through api/newsletter-subscribe.js on the server.
- *  - Web3Forms uses a public access key (safe for the browser).
+ *  1. Web3Forms  — contact form, quotation requests, consultation
+ *                  booking confirmations. Uses a public access key
+ *                  (safe for the browser bundle).
+ *
+ *  2. Resend     — newsletter welcome email. API key is private and
+ *                  lives server-side in api/newsletter-subscribe.cjs.
+ *                  The browser POSTs to /api/newsletter-subscribe and
+ *                  the Vercel serverless function makes the Resend call.
+ *
+ * Environment variables required:
+ *   VITE_WEB3FORMS_ACCESS_KEY  — client-side, already configured
+ *   RESEND_API_KEY             — server-side, set in Vercel env vars
  * =====================================================================
  */
 
@@ -179,14 +184,15 @@ export async function sendConsultationConfirmationEmail(
 // =====================================================================
 // 4. NEWSLETTER SUBSCRIPTION
 // =====================================================================
-// Calls /api/newsletter-subscribe — a Vercel serverless function that
-// sends a professional HTML welcome email via Resend.
+// POSTs to /api/newsletter-subscribe — a Vercel serverless function
+// (api/newsletter-subscribe.cjs) that sends a branded HTML welcome
+// email via the Resend transactional email API.
 //
-// Resend free tier: 3,000 emails/month, no credit card.
-// Get a key at https://resend.com → API Keys → Create API Key
+// The RESEND_API_KEY is kept server-side (no VITE_ prefix) and is
+// never bundled into the browser JavaScript.
 //
-// Add to Vercel → Project → Settings → Environment Variables:
-//   RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx   (NO VITE_ prefix)
+// To enable: add RESEND_API_KEY=re_xxxx in Vercel project settings.
+// Get a free key at https://resend.com (3,000 emails/month).
 // =====================================================================
 
 /**
